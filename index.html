@@ -726,7 +726,7 @@ async function loadHistorico() {
 }
 
 function renderHistTable(data, wrap) {
-  if (!data.length) {
+  if (!data || !data.length) {
     wrap.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Nenhum lançamento encontrado.</div>';
     return;
   }
@@ -772,8 +772,10 @@ async function deleteExpense(id, btn) {
   btn.disabled = true;
   btn.textContent = '...';
   console.log('[deleteExpense] id:', id);
+
+  let res;
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/gastos?id=eq.' + id, {
+    res = await fetch(SUPABASE_URL + '/rest/v1/gastos?id=eq.' + id, {
       method: 'DELETE',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -782,19 +784,27 @@ async function deleteExpense(id, btn) {
         'Prefer': 'return=minimal',
       },
     });
-    console.log('[deleteExpense] status:', res.status, res.statusText);
-    if (!res.ok) {
-      const text = await res.text();
-      const err  = text ? JSON.parse(text) : {};
-      throw new Error(err.message || 'Erro ' + res.status);
-    }
-    relData = null;
-    loadHistorico();
   } catch (e) {
-    alert('Erro ao excluir: ' + e.message);
+    alert('Erro de rede ao excluir: ' + e.message);
     btn.disabled = false;
     btn.textContent = 'Excluir';
+    return;
   }
+
+  console.log('[deleteExpense] status:', res.status, res.statusText);
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    let msg = 'Erro ' + res.status;
+    try { msg = JSON.parse(text).message || msg; } catch (_) {}
+    alert('Erro ao excluir: ' + msg);
+    btn.disabled = false;
+    btn.textContent = 'Excluir';
+    return;
+  }
+
+  relData = null;
+  await loadHistorico();
 }
 
 /* ──────────────────────────────────────
