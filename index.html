@@ -769,14 +769,29 @@ function clearHistFilters() {
 
 async function deleteExpense(id, btn) {
   if (!confirm('Excluir este lançamento?')) return;
-  btn.disabled = true; btn.textContent = '...';
+  btn.disabled = true;
+  btn.textContent = '...';
   try {
-    await api(`gastos?id=eq.${id}`, { method: 'DELETE' });
+    const res = await fetch(SUPABASE_URL + '/rest/v1/gastos?id=eq.' + id, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      const err  = text ? JSON.parse(text) : {};
+      throw new Error(err.message || 'Erro ' + res.status);
+    }
     relData = null;
     loadHistorico();
-  } catch(e) {
+  } catch (e) {
     alert('Erro ao excluir: ' + e.message);
-    btn.disabled = false; btn.textContent = 'Excluir';
+    btn.disabled = false;
+    btn.textContent = 'Excluir';
   }
 }
 
