@@ -740,7 +740,7 @@ function renderHistTable(data, wrap) {
       <td>${r.ano}</td>
       <td style="font-weight:600">${fmtBRL(r.valor)}</td>
       <td class="td-actions">
-        <button class="btn btn-danger" onclick="deleteExpense(${r.id}, this)">Excluir</button>
+        <button class="btn btn-danger" onclick="deleteExpense('${r.id}', this)">Excluir</button>
       </td>
     </tr>`;
   }).join('');
@@ -771,6 +771,7 @@ async function deleteExpense(id, btn) {
   if (!confirm('Excluir este lançamento?')) return;
   btn.disabled = true;
   btn.textContent = '...';
+  console.log('[deleteExpense] id:', id);
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/gastos?id=eq.' + id, {
       method: 'DELETE',
@@ -781,6 +782,7 @@ async function deleteExpense(id, btn) {
         'Prefer': 'return=minimal',
       },
     });
+    console.log('[deleteExpense] status:', res.status, res.statusText);
     if (!res.ok) {
       const text = await res.text();
       const err  = text ? JSON.parse(text) : {};
